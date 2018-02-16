@@ -21,28 +21,26 @@ const ReactAccelerometerMotion = ({ children }) => (
         </ReactAccelerometer>
       )
 
-      const App = () => (
-        <ReactAccelerometerMotion>
-          {({ x, y }) => {
+const App = () => (
+
+   	<ReactAccelerometerMotion>
+        {({ x, y }) => {
             const shadowStyle = {
-              transform: `translate3d(${x * 8}px, ${y * 5 + 30}px, 0) rotateY(${-x * 3}deg)`
+		transform: `translate3d(${x * 8}px, ${y * 5 + 30}px, 0) rotateY(${-x * 3}deg)`
             }
 
             const imageStyle = {
-              transform: `translate3d(${x * 2}px, ${y * -2 - 10}px, 0) rotateY(${-x * 3}deg)`
+		transform: `translate3d(${x * 2}px, ${y * -2 - 10}px, 0) rotateY(${-x * 3}deg)`
             }
 
             return (
               <div className="container">
-                <div className="shadow" style={shadowStyle} />
-                <div className="image" style={imageStyle} />
+                    <div className="shadow" style={shadowStyle} />
+                    <div className="image" style={imageStyle} />
               </div>
             )
-          }}
+        }}
         </ReactAccelerometerMotion>
-      )
-
-
-
+)
 
 export default App;

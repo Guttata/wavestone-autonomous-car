@@ -1,0 +1,110 @@
+import React, {Component} from 'react';
+import ReactDOM from 'react-dom';
+import FontIcon from 'material-ui/FontIcon';
+import {BottomNavigation, BottomNavigationItem} from 'material-ui/BottomNavigation';
+import Paper from 'material-ui/Paper';
+import IconLocationOn from 'material-ui/svg-icons/communication/location-on';
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
+import './AppNavBar.css';
+
+import App from '../App';
+import DrivingModeButtons from '../DrivingModeButtons';
+
+const accountIcon = <FontIcon className="material-icons">account_circle</FontIcon>;
+const driveIcon = <FontIcon className="material-icons">drive_eta</FontIcon>;
+const paramIcon = <FontIcon className="material-icons">build</FontIcon>;
+
+
+/**
+ * A simple example of `BottomNavigation`, with three labels and icons
+ * provided. The selected `BottomNavigationItem` is determined by application
+ * state (for instance, by the URL).
+ */
+class AppNavBar extends Component {
+  state = {
+      selectedIndex: 0,
+      showProfile : false,
+      showDriving: false,
+      showParameter: false,
+  };
+
+  select = (index) => this.setState({selectedIndex: index});
+
+   showProfileModal(){
+       this.select(0);
+       this.setState({
+	   showProfile: true,
+	   showDriving: false,
+	   showParameter: false,
+       });
+       ReactDOM.render(<App isVisible={this.state.showDriving}/>, document.getElementById('root'));
+       ReactDOM.render(<DrivingModeButtons />, document.getElementById('DrivingModeButtons'));
+    
+   }
+
+    hideProfileModal(){
+       this.setState({
+	   showProfile: false,
+       });
+   }
+
+    
+    showDrivingModal(){
+	this.select(1);
+	this.setState({
+	    showDriving: true,
+	});
+	ReactDOM.render(<App />, document.getElementById('root'));
+	ReactDOM.render(<DrivingModeButtons />, document.getElementById('DrivingModeButtons'));
+    }
+
+    hideDrivingModal(){
+	this.setState({
+	    showDriving: false,
+       });
+    }
+
+    
+   showParameterModal(){
+       this.select(2);
+       this.setState({
+	   showParameter: true,
+       });
+
+    }
+
+    hideParameterModal(){
+       this.setState({
+	   showParameter: false,
+       });
+
+    }
+
+    render() {
+    return (
+	    <MuiThemeProvider>
+      <Paper zDepth={1}>
+        <BottomNavigation selectedIndex={this.state.selectedIndex}>
+          <BottomNavigationItem
+            label="Profile"
+            icon={accountIcon}
+            onClick={() => this.showProfileModal()}
+          />
+          <BottomNavigationItem
+            label="Drive"
+            icon={driveIcon}
+        onClick={() => this.showDrivingModal()}/>
+          <BottomNavigationItem
+            label="Parameters"
+            icon={paramIcon}
+        onClick={() => this.showParameterModal()}
+          />
+        </BottomNavigation>
+      </Paper>
+            </MuiThemeProvider>
+
+    );
+  }
+}
+
+export default AppNavBar;

@@ -60,7 +60,7 @@ ul {
   background-color: #fff;
   background-position: center;
   background-size: cover;
-  background-image: url("bentley.png");
+  background-image: url("media/img/bentley.png");
   z-index: 100;
 }
 
@@ -71,26 +71,4 @@ ul {
 }
 
 
-#header {
-  line-height: 1em;
-   background-color: RGB(80,48, 120);
-}
 
-#header-img {
-  float : left;
-  width: 10%;
-  content:url("WaveS.png");
-}
-
-#header-title {
-  position: relative;
-  Font-size: 15px;
-  Font-Weight: Bold;
-  Color : white;
-  text-align : center;
-}
-
-
-#footer {
-  text-align:center;
-}

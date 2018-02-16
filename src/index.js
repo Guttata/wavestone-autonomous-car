@@ -2,11 +2,13 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
-import AppBarHeader from './AppBar';
-import NavBar from './NavBar';
+import DrivingModeButtons from './DrivingModeButtons';
+import AppHeader from './AppHeader/AppHeader';
+import AppNavBar from './AppNavBar/AppNavBar';
 import registerServiceWorker from './registerServiceWorker';
 
-ReactDOM.render(<AppBarHeader />, document.getElementById('AppBar'));
-ReactDOM.render(<App />, document.getElementById('root'));
-ReactDOM.render(<NavBar />, document.getElementById('NavBar'));
+ReactDOM.render(<AppHeader />, document.getElementById('AppHeader'));
+//ReactDOM.render(<App />, document.getElementById('root'));
+//ReactDOM.render(<DrivingModeButtons />, document.getElementById('DrivingModeButtons'));
+ReactDOM.render(<AppNavBar />, document.getElementById('AppNavBar'));
 registerServiceWorker();

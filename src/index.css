@@ -5,11 +5,16 @@ body {
 }
 
 
-#NavBar {
+#AppNavBar {
     background-color: #333;
     overflow: hidden;
     position: fixed;
     bottom: 0;
     width: 100%;
+}
+
+#DrivingModeButtons {
+    position : fixed;
+    right:10px;
 }
 
