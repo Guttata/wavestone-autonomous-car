@@ -33,9 +33,15 @@ const AccelerometerDrivingMode = () => (
             }
 
             return (
-              <div className="container">
-                    <div className="shadow" style={shadowStyle} />
-                    <div className="image" style={imageStyle} />
+              <div>
+                <div className="container">
+                      <div className="shadow" style={shadowStyle} />
+                      <div className="image" style={imageStyle} />
+                </div>
+                <br/><br/><br/>
+                <div>
+                        x: {Math.round(x) * (-1)}  ||  y: {Math.round(y)* (-1)}
+                </div>
               </div>
             )
         }}
