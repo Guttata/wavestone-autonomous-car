@@ -10,16 +10,16 @@ import './AppHeader.css';
  */
 
 class AppHeader extends Component {
-    render() {
-	return (
-		<MuiThemeProvider>
-		<AppBar className='App-Header'
-	    title={<div className='App-Header-Title'>Wavestone Autonomous Car</div>}
-	    iconClassNameRight="muidocs-icon-navigation-expand-more"
-		/>
-		</MuiThemeProvider>
-	);
-    }
+	render() {
+		return (
+			<MuiThemeProvider>
+				<AppBar className='App-Header'
+					title={<div className='App-Header-Title'>Wavestone Autonomous Car</div>}
+					iconClassNameRight="muidocs-icon-navigation-expand-more"
+				/>
+			</MuiThemeProvider>
+		);
+	}
 }
 
 export default AppHeader;
