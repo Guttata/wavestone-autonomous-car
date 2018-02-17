@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactAccelerometer from 'react-accelerometer'
 import { Motion, spring } from 'react-motion'
-import './DrivingModeAccelerometer.css';
+import './AccelerometerDrivingMode.css';
 
 /* Combining React-Accelerometer with React-Motion */
 const ReactAccelerometerMotion = ({ children }) => (
@@ -20,7 +20,7 @@ const ReactAccelerometerMotion = ({ children }) => (
         </ReactAccelerometer>
       )
 
-const DrivingModeAccelerometer = () => (
+const AccelerometerDrivingMode = () => (
 
    	<ReactAccelerometerMotion>
         {({ x, y }) => {
@@ -42,4 +42,4 @@ const DrivingModeAccelerometer = () => (
         </ReactAccelerometerMotion>
 )
 
-export default DrivingModeAccelerometer;
+export default AccelerometerDrivingMode;

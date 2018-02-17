@@ -1,9 +1,13 @@
 import React, {Component} from 'react';
+import ReactDOM from 'react-dom';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import AccelerometerDrivingIcon from 'material-ui/svg-icons/device/screen-rotation';
 import JoystickDrivingIcon from 'material-ui/svg-icons/toggle/radio-button-checked';
 import AutoPilotDrivingIcon from 'material-ui/svg-icons/maps/navigation';
+
+import AccelerometerDrivingMode from '../DrivingMode/AccelerometerDrivingMode';
+import JoystickDrivingMode from '../DrivingMode/JoystickDrivingMode';
 
 const AccelerometerDrivingModeStyle = {
 
@@ -18,32 +22,48 @@ const AutoPilotDrivingModeStyle = {
 };
 
 
+
+
+
+
+
+
 class DrivingModeButtons extends Component {
-    render(){
-	return (
-<MuiThemeProvider>
-	<div>
-	<FloatingActionButton mini={true} style={AccelerometerDrivingModeStyle}>
-	<AccelerometerDrivingIcon />
-	</FloatingActionButton>
+	showAccelerometerDrivingModal() {
+		 ReactDOM.render(<AccelerometerDrivingMode />, document.getElementById('root'));
+	}
 
-	<div>
-	<FloatingActionButton mini={true} style={JoystickDrivingModeStyle}>
-	<JoystickDrivingIcon />
-	</FloatingActionButton>
-	</div>
+	showJoystickDrivingModal() {
+		ReactDOM.render(<JoystickDrivingMode />, document.getElementById('root'));	
+	}
 
-	<div>
-	<FloatingActionButton mini={true} secondary={true} style={AutoPilotDrivingModeStyle}>
-	<AutoPilotDrivingIcon />
-	</FloatingActionButton>
-	</div>
+	showAutoPilotDrivingModal() {
+		
+	}
 
-    </div>
-</MuiThemeProvider>
+	render(){
+		return (
+			<MuiThemeProvider>
+				<div>
+					<FloatingActionButton mini={true} style={AccelerometerDrivingModeStyle} onClick={() => this.showAccelerometerDrivingModal()}>
+						<AccelerometerDrivingIcon />
+					</FloatingActionButton>
+				</div>
+				<div>
+					<FloatingActionButton mini={true} style={JoystickDrivingModeStyle} onClick={() => this.showJoystickDrivingModal()}>
+					<JoystickDrivingIcon />
+					</FloatingActionButton>
+				</div>
 
-	);
-    }
+				<div>
+					<FloatingActionButton mini={true} secondary={true} style={AutoPilotDrivingModeStyle} onClick={() => this.showAutoPilotDrivingModal()}>
+						<AutoPilotDrivingIcon />
+					</FloatingActionButton>
+				</div>
+			</MuiThemeProvider>
+
+		);
+	}
 }
 
 
