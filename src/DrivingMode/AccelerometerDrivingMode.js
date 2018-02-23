@@ -2,6 +2,9 @@ import React from 'react'
 import ReactAccelerometer from 'react-accelerometer'
 import { Motion, spring } from 'react-motion'
 import './AccelerometerDrivingMode.css';
+import { MoveAccelerometer } from './DriveClientWebSocket'
+import { Stop } from './DriveClientWebSocket'
+
 
 /* Combining React-Accelerometer with React-Motion */
 const ReactAccelerometerMotion = ({ children }) => (
@@ -31,7 +34,12 @@ const AccelerometerDrivingMode = () => (
             const imageStyle = {
 		transform: `translate3d(${x * 2}px, ${y * -2 - 10}px, 0) rotateY(${-x * 3}deg)`
             }
-
+			if (x > -1 && x < 1 && y > -1 && y < 1) {
+				Stop();
+			}
+			else {
+				MoveAccelerometer(x, y);
+			}
             return (
               <div>
                 <div className="container">
@@ -40,7 +48,7 @@ const AccelerometerDrivingMode = () => (
                 </div>
                 <br/><br/><br/>
                 <div>
-                        x: {Math.round(x) * (-1)}  ||  y: {Math.round(y)* (-1)}
+                        x: {Math.round(x)}  ||  y: {Math.round(y)}
                 </div>
               </div>
             )

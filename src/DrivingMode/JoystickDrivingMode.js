@@ -1,8 +1,10 @@
 import React, { Component } from 'react'
 import 'babel-polyfill'
 import NippleJs from 'nipplejs'
-
 import './JoystickDrivingMode.css';
+import { MoveJoystick } from './DriveClientWebSocket'
+import { Stop } from './DriveClientWebSocket'
+
 
 class JoystickDrivingMode extends Component {
   componentWillMount() {
@@ -25,13 +27,15 @@ class JoystickDrivingMode extends Component {
     })
     .on('end', (evt, data) => {
       this.setState({
-        end: data,
+          end: data,
       })
+	Stop();
     })
     .on('move', (evt, data) => {
       this.setState({
         move: data,
       })
+	MoveJoystick(this.state.move.angle.degree, this.state.move.distance);
     })
     .on('pressure', (evt, data) => {
       this.setState({
