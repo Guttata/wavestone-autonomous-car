@@ -1,0 +1,17 @@
+{
+  "name": "drivecontroller",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "math-statistics": "^1.2.0",
+    "mmm-usonic": "^2.5.3",
+    "rpio": "^0.9.20",
+    "socket.io": "^2.0.4"
+  }
+}
