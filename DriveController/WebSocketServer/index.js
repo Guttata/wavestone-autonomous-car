@@ -8,22 +8,43 @@ const io = require('socket.io')();
 
 io.on('connection', (client) => {
     console.log('a user connected'); 
-	client.on('moveJoystick', (data) => {
-		var degree = parseFloat(data.degree.toFixed(1));
-		var speed = parseFloat(data.speed.toFixed(1));
-		myCar.moveJoystick(degree, speed);
+		
+	client.on('MOVE UP', (speed) => {
+		myCar.moveUp(speed);
+		client.emit('forward distance', 15);
+    });
+		
+	client.on('MOVE DOWN', (speed) => {
+		myCar.moveDown(speed);
     });
 	
-	client.on('stop', () => {
+	client.on('MOVE RIGHT', (speed) => {
+		myCar.moveRight(speed);
+    });
+		
+	client.on('MOVE LEFT', (speed) => {
+		myCar.moveLeft(speed);
+    });
+		
+	client.on('MOVE UP RIGHT', (speed) => {
+		myCar.moveUpRight(speed);
+    });
+		
+	client.on('MOVE UP LEFT', (speed) => {
+		myCar.moveUpLeft(speed);
+    });
+		
+	client.on('MOVE DOWN RIGHT', (speed) => {
+		myCar.moveDownRight(speed);
+    });
+		
+	client.on('MOVE DOWN LEFT', (speed) => {
+		myCar.moveDownLeft(speed);
+    });
+		
+	client.on('STOP', () => {
 		myCar.stop();
     });
-	
-	client.on('moveAccelerometer', (data) => {
-		var x = parseFloat(data.x.toFixed(1));
-		var y = parseFloat(data.y.toFixed(1));
-		myCar.moveAccelerometer(x, y);
-    });
-	
 });
 
 

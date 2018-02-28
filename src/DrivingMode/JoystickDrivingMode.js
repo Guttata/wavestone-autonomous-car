@@ -5,6 +5,8 @@ import './JoystickDrivingMode.css';
 import { MoveJoystick } from './DriveClientWebSocket'
 import { Stop } from './DriveClientWebSocket'
 
+var DriveClient = require('./DriveClientWebSocket');
+var forwardDistance = DriveClient.forwardDistance;
 
 class JoystickDrivingMode extends Component {
   componentWillMount() {
@@ -35,7 +37,7 @@ class JoystickDrivingMode extends Component {
       this.setState({
         move: data,
       })
-	MoveJoystick(this.state.move.angle.degree, this.state.move.distance);
+	forwardDistance = MoveJoystick(this.state.move.angle.degree, this.state.move.distance);
     })
     .on('pressure', (evt, data) => {
       this.setState({
@@ -62,6 +64,8 @@ class JoystickDrivingMode extends Component {
           y: {typeof(this.state.move.direction) !== 'undefined' && typeof(this.state.move.direction.y) !== 'undefined' ? this.state.move.direction.y : null}
           <br/>
           angle: {typeof(this.state.move.direction) !== 'undefined' && typeof(this.state.move.direction.angle) !== 'undefined' ? this.state.move.direction.angle : null}
+		  <br/>
+		  Front obstacle at : {forwardDistance} cm
         </div>
       </div>
     )
