@@ -8,6 +8,7 @@ import AutoPilotDrivingIcon from 'material-ui/svg-icons/maps/navigation';
 
 import AccelerometerDrivingMode from '../DrivingMode/AccelerometerDrivingMode';
 import JoystickDrivingMode from '../DrivingMode/JoystickDrivingMode';
+import AutoPilotDrivingMode from '../DrivingMode/AutoPilotDrivingMode';
 
 const AccelerometerDrivingModeStyle = {
 
@@ -38,7 +39,7 @@ class DrivingModeButtons extends Component {
 	}
 
 	showAutoPilotDrivingModal() {
-		
+		ReactDOM.render(<AutoPilotDrivingMode />, document.getElementById('root'));	
 	}
 
 	render(){

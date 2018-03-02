@@ -33,7 +33,7 @@ function MoveJoystick(degree, speed) {
 		driveOrder = "MOVE DOWN RIGHT";
 	}
 	
-	socket.emit(driveOrder, speed);
+	socket.emit(driveOrder, 5.1 * speed);
 	console.log('Joystick :', driveOrder);
 	socket.on('forward distance', function(distance) {forwardDistance = distance;});
 	return forwardDistance;
@@ -82,8 +82,13 @@ function Stop() {
     socket.emit('STOP');
 }
 
+function AutoPilot() {
+    socket.emit('AUTO PILOT');
+}
+
+
 export { MoveJoystick };
 export { MoveAccelerometer };
 export { Stop };
+export { AutoPilot };
 export { forwardDistance };
-//module.exports.forwardDistance = forwardDistance;
