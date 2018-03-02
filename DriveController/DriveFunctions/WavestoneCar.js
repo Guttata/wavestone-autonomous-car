@@ -218,14 +218,18 @@ WavestoneCar.prototype.chooseDirection = function(){
 	else if (frontRightDistance > frontLeftDistance) {
 		if (frontRightDistance < constants.FRONT_RIGHT_ULTRASONIC_SENSOR_OBSTACLE_LIMIT) {
 			return "MOVE RIGHT";
-		} else {
+		} else if (frontDistance > 30 && frontLeftDistance > 30) {
 			return "MOVE UP RIGHT";
+		} else {
+			return "MOVE DOWN";
 		}
 	} else {
 		if (frontLeftDistance < constants.FRONT_LEFT_ULTRASONIC_SENSOR_OBSTACLE_LIMIT) {
 			return "MOVE LEFT";
-		} else {
+		} else if (frontDistance > 30 && frontRightDistance > 30) {
 			return "MOVE UP LEFT";
+		} else {
+			return "MOVE DOWN";
 		}
 	}
 }
@@ -277,9 +281,6 @@ WavestoneCar.prototype.autoPilot = function (){
 		case "MOVE UP" :
 			this.moveUp();
 			break;
-		case "MOVE DOWN" :
-			this.moveDown();
-			break;
 		case "MOVE UP RIGHT" :
 			this.moveUpRight();
 			break;
@@ -291,6 +292,15 @@ WavestoneCar.prototype.autoPilot = function (){
 			break;
 		case "MOVE LEFT" :
 			this.moveLeft();
+			break;
+		case "MOVE DOWN" :
+			this.moveDown();
+			break;
+		case "MOVE DOWN RIGHT" :
+			this.moveDownRight();
+			break;
+		case "MOVE DOWN LEFT" :
+			this.moveDownLeft();
 			break;
 	}
 		console.log("------------ END AUTO PILOT FUNCTION ------------");
