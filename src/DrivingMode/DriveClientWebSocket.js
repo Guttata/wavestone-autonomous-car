@@ -7,8 +7,8 @@ function MoveJoystick(degree, speed) {
 	var driveOrder = "";
 	
 	if ((degree >= 0 && degree <= 22.5) || (degree > 337.5 && degree <= 360)){
-		//Move RIGHT
-		driveOrder = "MOVE RIGHT";		
+		//Rotate RIGHT
+		driveOrder = "ROTATE RIGHT";		
 	} 
 	else if (degree > 22.5 && degree <= 67.5) {
 		//Move UP RIGHT
@@ -20,8 +20,8 @@ function MoveJoystick(degree, speed) {
 		//Move UP LEFT
 		driveOrder = "MOVE UP LEFT";
 	} else if (degree > 157.5 && degree <= 202.5) {
-		// Move LEFT
-		driveOrder = "MOVE LEFT";
+		// Rotate LEFT
+		driveOrder = "ROTATE LEFT";
 	} else if (degree > 202.5 && degree <= 247.5) {
 		// Move DOWN LEFT 
 		driveOrder = "MOVE DOWN LEFT";
@@ -48,8 +48,8 @@ function MoveAccelerometer(x, y, counter) {
 		//STOP
 			driveOrder = "STOP";
 		}else if (x > 2 && y > - 2 && y < 2){
-			//Move RIGHT
-			driveOrder = "MOVE RIGHT";
+			//Rotate RIGHT
+			driveOrder = "ROTATE RIGHT";
 		} else if (x > 2 && y > 2) {
 			//Move UP RIGHT
 			driveOrder = "MOVE UP RIGHT";		
@@ -60,8 +60,8 @@ function MoveAccelerometer(x, y, counter) {
 			//Move UP LEFT
 			driveOrder = "MOVE UP LEFT";		
 		} else if (x < -2 && y > -2 && y < 2) {
-			// Move LEFT
-			driveOrder = "MOVE LEFT";		
+			// Rotate LEFT
+			driveOrder = "ROTATE LEFT";		
 		} else if (x < -2 && y < -2) {
 			// Move DOWN LEFT 
 			driveOrder = "MOVE DOWN LEFT";		

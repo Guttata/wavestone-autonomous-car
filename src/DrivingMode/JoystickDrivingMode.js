@@ -57,16 +57,6 @@ class JoystickDrivingMode extends Component {
       <div className="container">
         <div className="react-joystick" />
         { this.getRenderDebug() }
-        <div>Vitesse : {typeof(this.state.move.distance) !== 'undefined' ? Math.round(this.state.move.distance) : null}</div>
-        <div>
-          x: {typeof(this.state.move.direction) !== 'undefined' && typeof(this.state.move.direction.x) !== 'undefined' ? this.state.move.direction.x : null}
-          <br/>
-          y: {typeof(this.state.move.direction) !== 'undefined' && typeof(this.state.move.direction.y) !== 'undefined' ? this.state.move.direction.y : null}
-          <br/>
-          angle: {typeof(this.state.move.direction) !== 'undefined' && typeof(this.state.move.direction.angle) !== 'undefined' ? this.state.move.direction.angle : null}
-		  <br/>
-		  Front obstacle at : {forwardDistance} cm
-        </div>
       </div>
     )
   }

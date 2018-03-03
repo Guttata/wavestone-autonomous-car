@@ -22,12 +22,12 @@ io.on('connection', (client) => {
 		myCar.moveDown(speed);
     });
 	
-	client.on('MOVE RIGHT', (speed) => {
-		myCar.moveRight(speed);
+	client.on('ROTATE RIGHT', (speed) => {
+		myCar.rotateRight(speed);
     });
 		
-	client.on('MOVE LEFT', (speed) => {
-		myCar.moveLeft(speed);
+	client.on('ROTATE LEFT', (speed) => {
+		myCar.rotateLeft(speed);
     });
 		
 	client.on('MOVE UP RIGHT', (speed) => {

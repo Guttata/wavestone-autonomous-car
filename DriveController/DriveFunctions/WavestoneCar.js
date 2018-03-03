@@ -48,23 +48,23 @@ WavestoneCar.prototype.moveDown = function (speed) {
 	}
 }
 
-WavestoneCar.prototype.moveRight = function (speed) {
-	if (this.currentDirection != "MOVE RIGHT") {
-		this.currentDirection = "MOVE RIGHT";
+WavestoneCar.prototype.rotateRight = function (speed) {
+	if (this.currentDirection != "ROTATE RIGHT") {
+		this.currentDirection = "ROTATE RIGHT";
 		var speed = 255;
 		this.LeftMotorEngine.moveBackward(speed);
 		this.RightMotorEngine.moveForward(speed);
-		console.log('MOVE RIGHT');
+		console.log('ROTATE RIGHT');
 	}
 }
 
-WavestoneCar.prototype.moveLeft = function (speed) {
-	if (this.currentDirection != "MOVE LEFT") {
-		this.currentDirection = "MOVE LEFT";
+WavestoneCar.prototype.rotateLeft = function (speed) {
+	if (this.currentDirection != "ROTATE LEFT") {
+		this.currentDirection = "ROTATE LEFT";
 		var speed = 255;
 		this.LeftMotorEngine.moveForward(speed);
 		this.RightMotorEngine.moveBackward(speed);
-		console.log('MOVE LEFT'); 
+		console.log('ROTATE LEFT'); 
 	}
 }
 
@@ -155,7 +155,7 @@ WavestoneCar.prototype.measureDistances = function () {
 WavestoneCar.prototype.isFrontObstacle = function(){
 	var frontDistance = this.FrontUltrasonicSensor.distance;
 	
-	if (frontDistance < constants.FRONT_ULTRASONIC_SENSOR_OBSTACLE_LIMIT)
+	if (frontDistance < 70)
 		return true;
 	else if (this.isFrontRightObstacle())
 		return true;
@@ -168,7 +168,7 @@ WavestoneCar.prototype.isFrontObstacle = function(){
 WavestoneCar.prototype.isFrontRightObstacle = function(){
 	var frontRightDistance = this.FrontRightUltrasonicSensor.distance;
 	
-	if (frontRightDistance < constants.FRONT_RIGHT_ULTRASONIC_SENSOR_OBSTACLE_LIMIT)
+	if (frontRightDistance < 65)
 		return true;
 	return false;
 }
@@ -176,7 +176,7 @@ WavestoneCar.prototype.isFrontRightObstacle = function(){
 WavestoneCar.prototype.isFrontLeftObstacle = function(){
 	var frontLeftDistance = this.FrontLeftUltrasonicSensor.distance;
 	
-	if (frontLeftDistance < constants.FRONT_LEFT_ULTRASONIC_SENSOR_OBSTACLE_LIMIT)
+	if (frontLeftDistance < 65)
 		return true;
 	return false;
 }
@@ -184,7 +184,7 @@ WavestoneCar.prototype.isFrontLeftObstacle = function(){
 WavestoneCar.prototype.isBackObstacle = function(){
 	var backDistance = this.BackUltrasonicSensor.distance;
 	
-	if (backDistance < constants.BACK_ULTRASONIC_SENSOR_OBSTACLE_LIMIT)
+	if (backDistance < 10)
 		return true;
 	return false;
 }
@@ -205,31 +205,79 @@ WavestoneCar.prototype.chooseDirection = function(){
 		return "MOVE UP";
 	}
 	//Front obstacle detected
-	else if (frontRightDistance < 10 || frontLeftDistance < 10) {
-		if (!this.isBackObstacle()) {	
-			if (frontRightDistance > frontLeftDistance) {
+	else if (frontDistance < 10 || frontRightDistance < 10 || frontLeftDistance < 10) {
+		// If we are in a front obstacle
+		if (!this.isBackObstacle()) {
+			//If there is no back obstacle	
+			if (frontRightDistance > 20 && frontRightDistance > frontLeftDistance) {
+				//If there is more space front right, then move back left to go front right after
 				return "MOVE DOWN LEFT"
-			} else if (frontRightDistance < frontLeftDistance) {
+			} else if (frontLeftDistance > 20 && frontRightDistance < frontLeftDistance) {
+				//If there is more space front left, then move back right to go front left after
 				return "MOVE DOWN RIGHT"
-			}
+			} else {
 			return "MOVE DOWN";
+			}
+		} else {
+			//If there is a back obstacle then rotate
+			return "ROTATE RIGHT";
 		}
 	}
 	else if (frontRightDistance > frontLeftDistance) {
-		if (frontRightDistance < constants.FRONT_RIGHT_ULTRASONIC_SENSOR_OBSTACLE_LIMIT) {
-			return "MOVE RIGHT";
+		//If there is more space front right
+		if (frontRightDistance < 45) {
+			//If front right distance not enough to move up
+			if (this.currentDirection == "ROTATE LEFT") {
+				return "ROTATE LEFT";
+			}
+			return "ROTATE RIGHT";
 		} else if (frontDistance > 30 && frontLeftDistance > 30) {
+			//If front right distance is enough and enough front and front left space then try to move UP
 			return "MOVE UP RIGHT";
 		} else {
-			return "MOVE DOWN";
+			if (!this.isBackObstacle()) {
+				//If there is no back obstacle	
+				if (frontRightDistance > 20 && frontRightDistance > frontLeftDistance) {
+					//If there is more space front right, then move back left to go front right after
+					return "MOVE DOWN LEFT"
+				} else if (frontLeftDistance > 20 && frontRightDistance < frontLeftDistance) {
+					//If there is more space front left, then move back right to go front left after
+					return "MOVE DOWN RIGHT"
+				} else {
+				return "MOVE DOWN";
+				}
+			} else {
+				//If there is a back obstacle then rotate
+				return "ROTATE RIGHT";
+			}
 		}
 	} else {
-		if (frontLeftDistance < constants.FRONT_LEFT_ULTRASONIC_SENSOR_OBSTACLE_LIMIT) {
-			return "MOVE LEFT";
+		//If there is more space front left
+		if (frontLeftDistance < 45) {
+			//If front left distance not enough to move up
+			if (this.currentDirection == "ROTATE RIGHT"){
+				return "ROTATE RIGHT";
+			}
+			return "ROTATE LEFT";
 		} else if (frontDistance > 30 && frontRightDistance > 30) {
+			//If front left distance is enough and enough front and front right space then try to move UP
 			return "MOVE UP LEFT";
 		} else {
-			return "MOVE DOWN";
+			if (!this.isBackObstacle()) {
+				//If there is no back obstacle	
+				if (frontRightDistance > 20 && frontRightDistance > frontLeftDistance) {
+					//If there is more space front right, then move back left to go front right after
+					return "MOVE DOWN LEFT"
+				} else if (frontLeftDistance > 20 && frontRightDistance < frontLeftDistance) {
+					//If there is more space front left, then move back right to go front left after
+					return "MOVE DOWN RIGHT"
+				} else {
+				return "MOVE DOWN";
+				}
+			} else {
+				//If there is a back obstacle then rotate
+				return "ROTATE RIGHT";
+			}
 		}
 	}
 }
@@ -287,11 +335,11 @@ WavestoneCar.prototype.autoPilot = function (){
 		case "MOVE UP LEFT" :
 			this.moveUpLeft();
 			break;
-		case "MOVE RIGHT" :
-			this.moveRight();
+		case "ROTATE RIGHT" :
+			this.rotateRight();
 			break;
-		case "MOVE LEFT" :
-			this.moveLeft();
+		case "ROTATE LEFT" :
+			this.rotateLeft();
 			break;
 		case "MOVE DOWN" :
 			this.moveDown();
