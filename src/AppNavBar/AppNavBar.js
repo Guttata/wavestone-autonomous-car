@@ -8,7 +8,7 @@ import './AppNavBar.css';
 
 
 import Profile from '../Profile/Profile'
-import AccelerometerDrivingMode from '../DrivingMode/AccelerometerDrivingMode';
+import JoystickDrivingMode from '../DrivingMode/JoystickDrivingMode';
 import DrivingModeButtons from '../DrivingMode/DrivingModeButtons';
 
 const accountIcon = <FontIcon className="material-icons">account_circle</FontIcon>;
@@ -49,7 +49,7 @@ class AppNavBar extends Component {
       showDriving: true,
       showParameter: false,
     });
-    ReactDOM.render(<AccelerometerDrivingMode />, document.getElementById('root'));
+    ReactDOM.render(<JoystickDrivingMode />, document.getElementById('root'));
     ReactDOM.render(<DrivingModeButtons />, document.getElementById('DrivingModeButtons'));
   }
   

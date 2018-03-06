@@ -1,4 +1,3 @@
-var DriveController = require ('./../DriveFunctions/DriveController.js');
 var cars = require ('./../DriveFunctions/WavestoneCar.js');
 var rpio = require('rpio');
 
@@ -6,6 +5,7 @@ const io = require('socket.io')();
 
 var WavestoneCar = cars.WavestoneCar;
 var myCar = new WavestoneCar();
+myCar.intervalUltrasonicSensorObj = setInterval(function(){myCar.measureDistances();}, 100);
 
 
 io.on('connection', (client) => {
@@ -51,7 +51,7 @@ io.on('connection', (client) => {
 		myCar.stop();
 		if (myCar.autoPilotOn) {
 			console.log("STOP AUTOPILOT");
-			
+			myCar.autoPilotOn = false;
 			clearInterval(myCar.intervalUltrasonicSensorObj);
 			clearInterval(myCar.intervalAutoPilotObj);
 		}

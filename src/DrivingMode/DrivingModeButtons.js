@@ -11,11 +11,11 @@ import JoystickDrivingMode from '../DrivingMode/JoystickDrivingMode';
 import AutoPilotDrivingMode from '../DrivingMode/AutoPilotDrivingMode';
 
 const AccelerometerDrivingModeStyle = {
-
+	marginTop: 20,
 };
 
 const JoystickDrivingModeStyle = {
-    marginTop: 20,
+    
 };
 
 const AutoPilotDrivingModeStyle = {
@@ -45,16 +45,19 @@ class DrivingModeButtons extends Component {
 	render(){
 		return (
 			<MuiThemeProvider>
-				<div>
-					<FloatingActionButton mini={true} style={AccelerometerDrivingModeStyle} onClick={() => this.showAccelerometerDrivingModal()}>
-						<AccelerometerDrivingIcon />
-					</FloatingActionButton>
-				</div>
+				
 				<div>
 					<FloatingActionButton mini={true} style={JoystickDrivingModeStyle} onClick={() => this.showJoystickDrivingModal()}>
 					<JoystickDrivingIcon />
 					</FloatingActionButton>
 				</div>
+				
+				<div>
+					<FloatingActionButton mini={true} style={AccelerometerDrivingModeStyle} onClick={() => this.showAccelerometerDrivingModal()}>
+						<AccelerometerDrivingIcon />
+					</FloatingActionButton>
+				</div>
+				
 
 				<div>
 					<FloatingActionButton mini={true} secondary={true} style={AutoPilotDrivingModeStyle} onClick={() => this.showAutoPilotDrivingModal()}>
