@@ -39,5 +39,5 @@ define("BACK_ULTRASONIC_SENSOR_TRIG_GPIO", 17);
 
 
 //IR Sensor, connected to the MCP
-define("RIGHT_IR_SENSOR_PIN", 0);
-define("LEFT_IR_SENSOR_PIN", 1);
+define("RIGHT_IR_SENSOR_PIN", 1);
+define("LEFT_IR_SENSOR_PIN", 0);

@@ -5,6 +5,7 @@ const io = require('socket.io')();
 
 var WavestoneCar = cars.WavestoneCar;
 var myCar = new WavestoneCar();
+//myCar.intervalUltrasonicSensorObj = setInterval(function(){myCar.measureDistances();}, 500);
 
 /*	
 
@@ -170,8 +171,11 @@ io.on('connection', (client) => {
 	});
 	
 	client.on('AUTO PILOT', () => {
+		//myCar.intervalUltrasonicSensorObj = setInterval(function(){myCar.measureDistances();}, 100); //Appart
+		//myCar.intervalAutoPilotObj = setInterval(function(){myCar.autoPilot();}, 300); //Appart
+		
+		myCar.intervalAutoPilotObj = setInterval(function(){myCar.autoPilot();}, 200);
 		myCar.intervalUltrasonicSensorObj = setInterval(function(){myCar.measureDistances();}, 100);
-		myCar.intervalAutoPilotObj = setInterval(function(){myCar.autoPilot();}, 300);
     });
 });
 

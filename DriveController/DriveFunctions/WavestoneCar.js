@@ -26,12 +26,13 @@ function WavestoneCar () {
 
 	//Shartp IR Sensor instanciation
 	this.RightSharpIRSensor = new SharpIRSensor("IR RIGHT SIDE", constants.RIGHT_IR_SENSOR_PIN);
-	//this.LeftSharpIRSensor = new SharpIRSensor("IR LEFT SIDE", constants.LEFT_IR_SENSOR_PIN);
+	this.LeftSharpIRSensor = new SharpIRSensor("IR LEFT SIDE", constants.LEFT_IR_SENSOR_PIN);
 
 	//Accelerometer
 	this.Accelerometer = new mpu9250({UpMagneto: true, DEBUG: true, GYRO_FS: 0, ACCEL_FS: 1});
 
 	this.autoPilotOn = false;
+	this.rotateCorrection = false;
 }
 
 WavestoneCar.prototype.moveUp = function (speed) {
@@ -133,13 +134,14 @@ WavestoneCar.prototype.measureDistances = function () {
 
 	//SharpIR sensor
 	this.RightSharpIRSensor.measureDistanceOnce();
-	//this.LeftSharpIRSensor.measureDistanceOnce();
+	this.LeftSharpIRSensor.measureDistanceOnce();
 }
 
 WavestoneCar.prototype.isFrontObstacle = function(){
 	var frontDistance = this.FrontUltrasonicSensor.distance;
 	
-	if (frontDistance < 70)
+	if (frontDistance < 70) //Appart
+	//if (frontDistance < 80)
 		return true;
 	else if (this.isFrontRightObstacle())
 		return true;
@@ -152,7 +154,8 @@ WavestoneCar.prototype.isFrontObstacle = function(){
 WavestoneCar.prototype.isFrontRightObstacle = function(){
 	var frontRightDistance = this.FrontRightUltrasonicSensor.distance;
 	
-	if (frontRightDistance < 50)
+	if (frontRightDistance < 50) //Appart
+	//if (frontRightDistance < 60)
 		return true;
 	return false;
 }
@@ -160,7 +163,26 @@ WavestoneCar.prototype.isFrontRightObstacle = function(){
 WavestoneCar.prototype.isFrontLeftObstacle = function(){
 	var frontLeftDistance = this.FrontLeftUltrasonicSensor.distance;
 	
-	if (frontLeftDistance < 50)
+	if (frontLeftDistance < 50) //Appart
+	//if (frontLeftDistance < 60) 
+		return true;
+	return false;
+}
+
+WavestoneCar.prototype.isLeftObstacle = function(){
+	var leftDistance = this.LeftSharpIRSensor.distance;
+	var numberOfDecreasingMeasure = this.LeftSharpIRSensor.numberOfDecreasingMeasure;
+	
+	if (numberOfDecreasingMeasure >= 5 && leftDistance < 26) 
+		return true;
+	return false;
+}
+
+WavestoneCar.prototype.isRightObstacle = function(){
+	var rightDistance = this.RightSharpIRSensor.distance;
+	var numberOfDecreasingMeasure = this.RightSharpIRSensor.numberOfDecreasingMeasure;
+	
+	if (numberOfDecreasingMeasure >= 5 && rightDistance < 26) 
 		return true;
 	return false;
 }
@@ -168,7 +190,8 @@ WavestoneCar.prototype.isFrontLeftObstacle = function(){
 WavestoneCar.prototype.isBackObstacle = function(){
 	var backDistance = this.BackUltrasonicSensor.distance;
 	
-	if (backDistance < 10)
+	if (backDistance < 10)//Appart
+	//if (backDistance < 20)
 		return true;
 	return false;
 }
@@ -178,15 +201,18 @@ WavestoneCar.prototype.moveUpRightStrategy = function(){
 	var frontRightDistance = this.FrontRightUltrasonicSensor.distance;
 	var frontLeftDistance = this.FrontLeftUltrasonicSensor.distance;
 
-	if (frontRightDistance < 50) {
+	if (frontRightDistance < 50) { //Appart
+	//if (frontRightDistance < 60) { 
 		//If front right distance not enough to move up
 		return this.rotateStrategy();
-	} else if (frontDistance > 25 && frontLeftDistance > 25) {
+	} else if (frontDistance > 25 && frontLeftDistance > 25) { //Appart
+	//} else if (frontDistance > 35 && frontLeftDistance > 35) {
 		//If front right distance is enough and enough front and front left space then try to move UP
 		return "MOVE UP RIGHT";
 	} else {
 		// If we are in a front obstacle
-		return this.backwardStrategy();
+		//return this.backwardStrategy();
+		return this.rotateStrategy();
 	}
 }
 
@@ -195,15 +221,19 @@ WavestoneCar.prototype.moveUpLeftStrategy = function(){
 	var frontRightDistance = this.FrontRightUltrasonicSensor.distance;
 	var frontLeftDistance = this.FrontLeftUltrasonicSensor.distance;
 
-	if (frontLeftDistance < 50) {
+	if (frontLeftDistance < 50) { //Appart
+	//if (frontLeftDistance < 60) {
+	//if (frontLeftDistance < 50 || (frontDistance < 30 && frontRightDistance < 30)) {
 		//If front left distance not enough to move up
 		return this.rotateStrategy();
-	} else if (frontDistance > 25 && frontRightDistance > 25) {
+	} else if (frontDistance > 25 && frontRightDistance > 25) { //Appart
+	//} else if (frontDistance > 35 && frontRightDistance > 35) {
 		//If front left distance is enough and enough front and front right space then try to move UP
 		return "MOVE UP LEFT";
 	} else {
 		// If we are in a front obstacle
-		return this.backwardStrategy();
+		//return this.backwardStrategy();
+		return this.rotateStrategy();
 	}
 
 }
@@ -217,9 +247,11 @@ WavestoneCar.prototype.backwardStrategy = function (){
 	//If there is no back obstacle	
 	if (!this.isBackObstacle()) {
 		//If there is more space front right, then move back left to go front right after
-		if (frontRightDistance > 20 && frontRightDistance > frontLeftDistance) {
+		if (frontRightDistance > 20 && frontRightDistance > frontLeftDistance) { //Appart
+		//if (frontRightDistance > 30 && frontRightDistance > frontLeftDistance) {
 			return "MOVE DOWN LEFT"
-		} else if (frontLeftDistance > 20 && frontRightDistance < frontLeftDistance) {
+		} else if (frontLeftDistance > 20 && frontRightDistance < frontLeftDistance) {//Appart
+		//} else if (frontLeftDistance > 30 && frontRightDistance < frontLeftDistance) {
 			//If there is more space front left, then move back right to go front left after
 			return "MOVE DOWN RIGHT"
 		} else {
@@ -231,18 +263,34 @@ WavestoneCar.prototype.backwardStrategy = function (){
 	}
 }
 
+WavestoneCar.prototype.moreSpaceRightOrLeft = function() {
+	var leftDistance = this.LeftSharpIRSensor.distance;
+	var rightDistance = this.RightSharpIRSensor.distance;
+
+	if (leftDistance > 22 && leftDistance > rightDistance) {
+		return "LEFT";
+	}
+	else if (rightDistance > 22) {
+		return "RIGHT";
+	}
+	return "NONE";
+}
+
 WavestoneCar.prototype.rotateStrategy = function(){
 	var frontDistance = this.FrontUltrasonicSensor.distance;
 	var frontRightDistance = this.FrontRightUltrasonicSensor.distance;
 	var frontLeftDistance = this.FrontLeftUltrasonicSensor.distance;
 	var backDistance = this.BackUltrasonicSensor.distance;
+	var leftDistance = this.LeftSharpIRSensor.distance;
+	var rightDistance = this.RightSharpIRSensor.distance;
 
-	if (frontDistance > 5 && frontRightDistance > 5 && frontLeftDistance > 5 && backDistance > 5) {
-		if (this.currentDirection == "ROTATE RIGHT" || this.currentDirection == "MOVE UP RIGHT" || this.currentDirection == "MOVE DOWN LEFT") {
+	if (frontDistance > 5 && frontRightDistance > 5 && frontLeftDistance > 5 && backDistance > 5) {//Appart
+		if ((this.currentDirection == "ROTATE RIGHT" || this.currentDirection == "MOVE UP RIGHT" || this.currentDirection == "MOVE DOWN LEFT") && this.moreSpaceRightOrLeft() == "RIGHT") {
 			return "ROTATE RIGHT";
-		} else if (this.currentDirection == "ROTATE LEFT" || this.currentDirection == "MOVE UP LEFT" || this.currentDirection == "MOVE DOWN RIGHT") {
+		} else if ((this.currentDirection == "ROTATE LEFT" || this.currentDirection == "MOVE UP LEFT" || this.currentDirection == "MOVE DOWN RIGHT") && this.moreSpaceRightOrLeft() == "LEFT") {
 			return "ROTATE LEFT";
-		} else if (frontRightDistance > frontLeftDistance) {
+	//	} else if (frontRightDistance > frontLeftDistance) {
+		} else if (rightDistance > leftDistance) {
 			return "ROTATE RIGHT";
 		} else {
 			return "ROTATE LEFT";
@@ -255,24 +303,53 @@ WavestoneCar.prototype.rotateStrategy = function(){
 
 }
 
+WavestoneCar.prototype.notYetStarted = function (){
+	var frontDistance = this.FrontUltrasonicSensor.distance;
+	var frontRightDistance = this.FrontRightUltrasonicSensor.distance;
+	var frontLeftDistance = this.FrontLeftUltrasonicSensor.distance;
+	var backDistance = this.BackUltrasonicSensor.distance;
+	
+	if (frontDistance == 0 && frontRightDistance == 0 && frontLeftDistance == 0 && backDistance == 0){
+		return true;
+	}
+	return false;
+}
+
 
 WavestoneCar.prototype.chooseDirection = function(){
 	var frontDistance = this.FrontUltrasonicSensor.distance;
 	var frontRightDistance = this.FrontRightUltrasonicSensor.distance;
 	var frontLeftDistance = this.FrontLeftUltrasonicSensor.distance;
 	var backDistance = this.BackUltrasonicSensor.distance;
+	var leftDistance = this.LeftSharpIRSensor.distance;
+	var rightDistance = this.RightSharpIRSensor.distance;
+
 	
 	console.log(this.FrontUltrasonicSensor.name, ": " , this.FrontUltrasonicSensor.distance);
 	console.log(this.FrontRightUltrasonicSensor.name, ": " , this.FrontRightUltrasonicSensor.distance);
 	console.log(this.FrontLeftUltrasonicSensor.name, ": " , this.FrontLeftUltrasonicSensor.distance);
 	console.log(this.BackUltrasonicSensor.name, ": " , this.BackUltrasonicSensor.distance);
+	console.log(this.LeftSharpIRSensor.name, ": " , this.LeftSharpIRSensor.distance);
+	console.log(this.RightSharpIRSensor.name, ": " , this.RightSharpIRSensor.distance);
 
+	
+	if (leftDistance > 25 && rightDistance > 25) {
+		this.rotateCorrection = false;
+	}
+
+	if (this.notYetStarted()) {
+		return "STOP";
+	}
 	//No front obstacle, move up
-	if (!this.isFrontObstacle()) {
+	else if (!this.isFrontObstacle()) {
+		if (!this.rotateCorrection && (this.isRightObstacle() || this.isLeftObstacle())) {
+			this.rotateCorrection = true;
+			return this.rotateStrategy();
+		}
 		return "MOVE UP";
 	}
 	//Front obstacle detected and we are to close to move up / move up right left / move up right
-	else if (frontDistance < 10 || frontRightDistance < 10 || frontLeftDistance < 10) {
+	else if (frontDistance < 20 || frontRightDistance < 20 || frontLeftDistance < 20) {
 		return this.rotateStrategy();
 	}
 	//If there is more space front right
@@ -326,101 +403,6 @@ WavestoneCar.prototype.autoPilot = function (){
 module.exports.WavestoneCar = WavestoneCar;
 
 
-/*
-WavestoneCar.prototype.chooseDirection = function(){
-	var frontDistance = this.FrontUltrasonicSensor.distance;
-	var frontRightDistance = this.FrontRightUltrasonicSensor.distance;
-	var frontLeftDistance = this.FrontLeftUltrasonicSensor.distance;
-	var backDistance = this.BackUltrasonicSensor.distance;
-	
-	console.log(this.FrontUltrasonicSensor.name, ": " , this.FrontUltrasonicSensor.distance);
-	console.log(this.FrontRightUltrasonicSensor.name, ": " , this.FrontRightUltrasonicSensor.distance);
-	console.log(this.FrontLeftUltrasonicSensor.name, ": " , this.FrontLeftUltrasonicSensor.distance);
-	console.log(this.BackUltrasonicSensor.name, ": " , this.BackUltrasonicSensor.distance);
-
-	//No front obstacle
-	if (!this.isFrontObstacle()) {
-		return "MOVE UP";
-	}
-	//Front obstacle detected
-	else if (frontDistance < 10 || frontRightDistance < 10 || frontLeftDistance < 10) {
-		// If we are in a front obstacle
-		if (!this.isBackObstacle()) {
-			//If there is no back obstacle	
-			if (frontRightDistance > 20 && frontRightDistance > frontLeftDistance) {
-				//If there is more space front right, then move back left to go front right after
-				return "MOVE DOWN LEFT"
-			} else if (frontLeftDistance > 20 && frontRightDistance < frontLeftDistance) {
-				//If there is more space front left, then move back right to go front left after
-				return "MOVE DOWN RIGHT"
-			} else {
-			return "MOVE DOWN";
-			}
-		} else {
-			//If there is a back obstacle then rotate
-			return "ROTATE RIGHT";
-		}
-	}
-	else if (frontRightDistance > frontLeftDistance) {
-		//If there is more space front right
-		if (frontRightDistance < 45) {
-			//If front right distance not enough to move up
-			if (this.currentDirection == "ROTATE LEFT") {
-				return "ROTATE LEFT";
-			}
-			return "ROTATE RIGHT";
-		} else if (frontDistance > 30 && frontLeftDistance > 30) {
-			//If front right distance is enough and enough front and front left space then try to move UP
-			return "MOVE UP RIGHT";
-		} else {
-			if (!this.isBackObstacle()) {
-				//If there is no back obstacle	
-				if (frontRightDistance > 20 && frontRightDistance > frontLeftDistance) {
-					//If there is more space front right, then move back left to go front right after
-					return "MOVE DOWN LEFT"
-				} else if (frontLeftDistance > 20 && frontRightDistance < frontLeftDistance) {
-					//If there is more space front left, then move back right to go front left after
-					return "MOVE DOWN RIGHT"
-				} else {
-				return "MOVE DOWN";
-				}
-			} else {
-				//If there is a back obstacle then rotate
-				return "ROTATE RIGHT";
-			}
-		}
-	} else {
-		//If there is more space front left
-		if (frontLeftDistance < 45) {
-			//If front left distance not enough to move up
-			if (this.currentDirection == "ROTATE RIGHT"){
-				return "ROTATE RIGHT";
-			}
-			return "ROTATE LEFT";
-		} else if (frontDistance > 30 && frontRightDistance > 30) {
-			//If front left distance is enough and enough front and front right space then try to move UP
-			return "MOVE UP LEFT";
-		} else {
-			if (!this.isBackObstacle()) {
-				//If there is no back obstacle	
-				if (frontRightDistance > 20 && frontRightDistance > frontLeftDistance) {
-					//If there is more space front right, then move back left to go front right after
-					return "MOVE DOWN LEFT"
-				} else if (frontLeftDistance > 20 && frontRightDistance < frontLeftDistance) {
-					//If there is more space front left, then move back right to go front left after
-					return "MOVE DOWN RIGHT"
-				} else {
-				return "MOVE DOWN";
-				}
-			} else {
-				//If there is a back obstacle then rotate
-				return "ROTATE RIGHT";
-			}
-		}
-	}
-}
-
-*/
 
 ///////////////////////////////////////////////////////////////////
 
@@ -471,14 +453,24 @@ function UltrasonicSensor (name, echoGpio, trigGpio){
 	this.name = name;
 	this.echo = new Gpio(echoGpio, {mode: Gpio.INPUT, alert: true});
 	this.trigger = new Gpio(trigGpio, {mode: Gpio.OUTPUT});
-	this.distance = 0;
+	this.distance = -1;
 }
 
 UltrasonicSensor.prototype.setDistance = function (distance){
-	if (distance < 0 || distance > 200) {
+	console.log(this.name, " RAW : " , distance);
+	if (distance < 0) {
 		distance = 0;
 	}
-	this.distance = (this.distance + distance) / 2; //Perform an average between the precedent value and the new one.
+	else if (distance > 150) {
+		distance = 100;
+	}
+	console.log(this.name, "interpreted: " , distance);
+	if (this.distance == -1) {
+		this.distance = distance;
+	}
+	else {
+		this.distance = (this.distance + distance) / 2; //Perform an average between the precedent value and the new one.
+	}
 }
 
 UltrasonicSensor.prototype.measureDistanceOnce = function (){
@@ -502,7 +494,6 @@ UltrasonicSensor.prototype.measureDistanceOnce = function (){
 			diff = (endTick >> 0) - (startTick >> 0); // Unsigned 32 bit arithmetic
 			distance = diff / 2 / MICROSECDONDS_PER_CM;
 			sensor.setDistance(distance);
-			console.log(sensor.name, ": " , sensor.distance);
 			sensor.echo.removeListener('alert', alertHandler);
 		}
 	}
@@ -517,7 +508,8 @@ module.exports.UltrasonicSensor = UltrasonicSensor;
 function SharpIRSensor(name, pin){
 	this.name = name;
 	this.pin = pin;
-	this.distance = 0;
+	this.distance = -1;
+	this.numberOfDecreasingMeasure = 0;
 }
 
 SharpIRSensor.prototype.setDistance = function (distance){
@@ -526,7 +518,20 @@ SharpIRSensor.prototype.setDistance = function (distance){
 	} else if (distance > 30) {
 		distance = 35;
 	}
-	this.distance = (this.distance + distance) / 2; //Perform an average between the precedent value and the new one.
+	
+	//If previous measure is greater than the new one
+	if (this.distance > distance)
+		this.numberOfDecreasingMeasure++;
+	else	
+		this.numberOfDecreasingMeasure = 0;
+
+	if (this.distance == -1) {
+		this.distance = distance;
+	} else {
+		this.distance = (this.distance + distance) / 2; //Perform an average between the precedent value and the new one.
+	}
+	
+	
 }
 
 SharpIRSensor.prototype.measureDistanceOnce = function (){
