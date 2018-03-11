@@ -152,7 +152,7 @@ WavestoneCar.prototype.isFrontObstacle = function(){
 WavestoneCar.prototype.isFrontRightObstacle = function(){
 	var frontRightDistance = this.FrontRightUltrasonicSensor.distance;
 	
-	if (frontRightDistance < 65)
+	if (frontRightDistance < 50)
 		return true;
 	return false;
 }
@@ -160,7 +160,7 @@ WavestoneCar.prototype.isFrontRightObstacle = function(){
 WavestoneCar.prototype.isFrontLeftObstacle = function(){
 	var frontLeftDistance = this.FrontLeftUltrasonicSensor.distance;
 	
-	if (frontLeftDistance < 65)
+	if (frontLeftDistance < 50)
 		return true;
 	return false;
 }
@@ -181,7 +181,7 @@ WavestoneCar.prototype.moveUpRightStrategy = function(){
 	if (frontRightDistance < 50) {
 		//If front right distance not enough to move up
 		return this.rotateStrategy();
-	} else if (frontDistance > 30 && frontLeftDistance > 30) {
+	} else if (frontDistance > 25 && frontLeftDistance > 25) {
 		//If front right distance is enough and enough front and front left space then try to move UP
 		return "MOVE UP RIGHT";
 	} else {
@@ -198,7 +198,7 @@ WavestoneCar.prototype.moveUpLeftStrategy = function(){
 	if (frontLeftDistance < 50) {
 		//If front left distance not enough to move up
 		return this.rotateStrategy();
-	} else if (frontDistance > 30 && frontRightDistance > 30) {
+	} else if (frontDistance > 25 && frontRightDistance > 25) {
 		//If front left distance is enough and enough front and front right space then try to move UP
 		return "MOVE UP LEFT";
 	} else {
@@ -483,7 +483,6 @@ UltrasonicSensor.prototype.setDistance = function (distance){
 
 UltrasonicSensor.prototype.measureDistanceOnce = function (){
 	var sensor = this;
-	console.log("------- BEGIN MEASURE DISTANCES -------");
 	sensor.trigger.digitalWrite(0); // Make sure trigger is low
 	var startTick;
 	var distance;
@@ -508,7 +507,6 @@ UltrasonicSensor.prototype.measureDistanceOnce = function (){
 		}
 	}
   	sensor.echo.on('alert', alertHandler);
-	console.log("------- END MEASURE DISTANCES -------");
 }
 
 module.exports.UltrasonicSensor = UltrasonicSensor;
@@ -533,20 +531,17 @@ SharpIRSensor.prototype.setDistance = function (distance){
 
 SharpIRSensor.prototype.measureDistanceOnce = function (){
 	var sensor = this;
-	console.log("------- BEGIN MEASURE DISTANCES -------");
 	var tempSensor = mcpadc.open(sensor.pin, function (err) {
 		if (err) throw err;
 	  
 		tempSensor.read(function (err, reading) {
 			if (err) throw err;
 	  		var  volts = reading.value; 
-			console.log(sensor.name, "volts : " , volts);
 			var distance = 13 / (volts*3.8);
 			sensor.setDistance(distance);
 			console.log(sensor.name, ": " , sensor.distance);
 		  });
 	  });
-	console.log("------- END MEASURE DISTANCES -------");
 }
 
 module.exports.SharpIRSensor = SharpIRSensor;
