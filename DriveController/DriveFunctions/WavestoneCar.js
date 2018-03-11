@@ -2,6 +2,7 @@ var constants = require("./WavestoneCarConstants");
 var rpio = require('rpio');
 var Gpio = require('pigpio').Gpio;
 var mcpadc = require('mcp-spi-adc');
+var mpu9250 = require('mpu9250');
 
 
 var options = {
@@ -24,8 +25,11 @@ function WavestoneCar () {
 	this.BackUltrasonicSensor = new UltrasonicSensor ("US BACK SENSOR", constants.BACK_ULTRASONIC_SENSOR_ECHO_GPIO, constants.BACK_ULTRASONIC_SENSOR_TRIG_GPIO);
 
 	//Shartp IR Sensor instanciation
-	this.RightSharpIRSensor = new SharpIRSensor("RIGHT SIDE", constants.RIGHT_IR_SENSOR_PIN);
-	this.LeftSharpIRSensor = new SharpIRSensor("LEFT SIDE", constants.LEFT_IR_SENSOR_PIN);
+	this.RightSharpIRSensor = new SharpIRSensor("IR RIGHT SIDE", constants.RIGHT_IR_SENSOR_PIN);
+	//this.LeftSharpIRSensor = new SharpIRSensor("IR LEFT SIDE", constants.LEFT_IR_SENSOR_PIN);
+
+	//Accelerometer
+	this.Accelerometer = new mpu9250({UpMagneto: true, DEBUG: true, GYRO_FS: 0, ACCEL_FS: 1});
 
 	this.autoPilotOn = false;
 }
@@ -120,11 +124,7 @@ WavestoneCar.prototype.stop = function () {
 };
 
 WavestoneCar.prototype.measureDistances = function () {
-	//this.measureUltraSonicDistanceOnce(this.FrontUltrasonicSensor);
-	//this.measureUltraSonicDistanceOnce(this.FrontRightUltrasonicSensor);
-	//this.measureUltraSonicDistanceOnce(this.FrontLeftUltrasonicSensor);
-	//this.measureUltraSonicDistanceOnce(this.BackUltrasonicSensor);
-
+	
 	//Ultrasonic sensor
 	this.FrontUltrasonicSensor.measureDistanceOnce();
 	this.FrontRightUltrasonicSensor.measureDistanceOnce();
@@ -132,7 +132,7 @@ WavestoneCar.prototype.measureDistances = function () {
 	this.BackUltrasonicSensor.measureDistanceOnce();
 
 	//SharpIR sensor
-	//this.RightSharpIRSensor.measureDistanceOnce();
+	this.RightSharpIRSensor.measureDistanceOnce();
 	//this.LeftSharpIRSensor.measureDistanceOnce();
 }
 
@@ -526,7 +526,7 @@ SharpIRSensor.prototype.setDistance = function (distance){
 	if (distance < 0) {
 		distance = 0;
 	} else if (distance > 30) {
-		distance = 30;
+		distance = 35;
 	}
 	this.distance = (this.distance + distance) / 2; //Perform an average between the precedent value and the new one.
 }
@@ -534,18 +534,22 @@ SharpIRSensor.prototype.setDistance = function (distance){
 SharpIRSensor.prototype.measureDistanceOnce = function (){
 	var sensor = this;
 	console.log("------- BEGIN MEASURE DISTANCES -------");
-	var tempSensor = mcpadc.open(sensor.pin, {speedHz: 20000}, function (err) {
+	var tempSensor = mcpadc.open(sensor.pin, function (err) {
 		if (err) throw err;
 	  
 		tempSensor.read(function (err, reading) {
 			if (err) throw err;
-	  		var  volts = reading.value * 0.0048828125;  // value from sensor * (5/1024);
-			var distance = 13 / volts;
+	  		var  volts = reading.value; 
+			console.log(sensor.name, "volts : " , volts);
+			var distance = 13 / (volts*3.8);
 			sensor.setDistance(distance);
-	  		console.log(sensor.distance);
+			console.log(sensor.name, ": " , sensor.distance);
 		  });
 	  });
 	console.log("------- END MEASURE DISTANCES -------");
 }
 
 module.exports.SharpIRSensor = SharpIRSensor;
+
+////////////////////////////////////////////////////////////////
+
