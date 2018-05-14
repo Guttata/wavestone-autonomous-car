@@ -48,9 +48,8 @@ function WavestoneCar () {
 	
 	//AWS connexion
 	this.AWS = null;
-	//this.connectToAWS();
-	//this.AWSOrderListener();
-
+	this.connectToAWS();
+	
 	//DEBUG variable
 	this.testCM = null;
 	this.testEncoder = null;
@@ -77,6 +76,9 @@ WavestoneCar.prototype.connectToAWS = function () {
 			car.AWS.publish('carStatus', JSON.stringify({car_status: 1}));
 			car.AWS.subscribe('Vehicle/Order');
 		});
+
+		this.AWSOrderListener();
+
 	});
 }
 
@@ -87,8 +89,9 @@ WavestoneCar.prototype.AWSOrderListener = function ()
 	isOnline().then(online => {
 		car.AWS.on ('message', function(topic, payload) {
 			console.log('message', topic, payload.toString());
-			var messageID = payload.messageID;
-			car.AWS.publish(topic, JSON.stringify({messageID: 'ACK'}));
+			var messageID = JSON.parse(payload).id;
+			console.log ("Message ID : ", messageID);
+			car.AWS.publish('ACK_topic', JSON.stringify({ACK: messageID}));
 		});
 	});
 }

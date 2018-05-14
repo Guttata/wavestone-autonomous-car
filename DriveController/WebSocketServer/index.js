@@ -8,7 +8,7 @@ var myCar = new WavestoneCar();
 myCar.measureAll();
 //myCar.moveUpCM(100, 255);
 //myCar.moveDownCM(100, 255);
-myCar.intervalAccelerometer = setInterval(function(){myCar.measureAccelerometer();}, 500);
+//myCar.intervalAccelerometer = setInterval(function(){myCar.measureAccelerometer();}, 500);
 
 
 //myCar.printEncoderRight = setInterval(function(){console.log("Right encoder", myCar.RightEncoder.nbTicks)}, 100);
