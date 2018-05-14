@@ -9,7 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-iot-device-sdk": "^2.2.1",
     "i2c-bus": "^3.0.0",
+    "is-online": "^7.0.0",
     "johnny-five": "^0.14.1",
     "math-statistics": "^1.2.0",
     "mcp-spi-adc": "^2.0.0",
