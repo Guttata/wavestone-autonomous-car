@@ -474,9 +474,9 @@ WavestoneCar.prototype.rotateStrategy = function(){
 	var rightDistance = this.RightSharpIRSensor.distance;
 
 	
-		if ((this.currentDirection == "ROTATE RIGHT" || this.currentDirection == "MOVE UP RIGHT" || this.currentDirection == "MOVE DOWN LEFT") && this.moreSpaceRightOrLeft() == "RIGHT") {
+		if ((this.currentDirection == "ROTATE RIGHT" || this.currentDirection == "MOVE UP RIGHT" || this.currentDirection == "MOVE DOWN LEFT") && this.RightSharpIRSensor.distance > 10) {
 			return "ROTATE RIGHT";
-		} else if ((this.currentDirection == "ROTATE LEFT" || this.currentDirection == "MOVE UP LEFT" || this.currentDirection == "MOVE DOWN RIGHT") && this.moreSpaceRightOrLeft() == "LEFT") {
+		} else if ((this.currentDirection == "ROTATE LEFT" || this.currentDirection == "MOVE UP LEFT" || this.currentDirection == "MOVE DOWN RIGHT") && this.LeftSharpIRSensor.distance > 10) {
 			return "ROTATE LEFT";
 		} else if (rightDistance > leftDistance) {
 			return "ROTATE RIGHT";
@@ -616,7 +616,7 @@ WavestoneCar.prototype.autoPilot = function (){
 	this.autoPilotOn = true;
 	var direction = "";
 	
-	if (this.notYetStarted()) {
+	if (this.notYetStarted() || this.isNotStable()) {
 		direction = "STOP";
 		console.log("STOP NOT YET STARTED");
 	}
