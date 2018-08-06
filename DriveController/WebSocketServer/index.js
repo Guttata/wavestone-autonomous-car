@@ -1,19 +1,24 @@
 var cars = require ('./../DriveFunctions/WavestoneCar.js');
 var rpio = require('rpio');
 const io = require('socket.io')();
-var isOnline = require('is-online');
+//var isOnline = require('is-online');
+const isReachable = require('is-reachable');
 
 var WavestoneCar = cars.WavestoneCar;
 var myCar = new WavestoneCar();
-myCar.measureAll();
-//myCar.moveUpCM(100, 255);
+//myCar.measureAll();
+
+
+//////////////////////////////////////////////////////////////// TEST ////////////////////////////////////////////////////////////////
+
+myCar.stop();
+//myCar.moveUpCM(20, 255);
 //myCar.moveDownCM(100, 255);
-//myCar.intervalAccelerometer = setInterval(function(){myCar.measureAccelerometer();}, 500);
+//setInterval(function(){myCar.Accelerometer.measureOnce();}, 5);
 
+//myCar.rotateRightDegree(360, 255);
 
-//myCar.printEncoderRight = setInterval(function(){console.log("Right encoder", myCar.RightEncoder.nbTicks)}, 100);
-//myCar.printEncoderLeft = setInterval(function(){console.log("Left encoder", myCar.LeftEncoder.nbTicks)}, 100);
-
+//////////////////////////////////////////////////////////////// TEST ////////////////////////////////////////////////////////////////
 
 
 io.on('connection', (client) => {
@@ -52,29 +57,11 @@ io.on('connection', (client) => {
 		
 	client.on('STOP', () => {
 		console.log("STOP");
-		myCar.stop();
-		if (myCar.autoPilotOn) {
-			console.log("STOP AUTOPILOT");
-			myCar.autoPilotOn = false;
-			clearInterval(myCar.intervalDistance);
-			clearInterval(myCar.intervalAccelerometer);
-			clearInterval(myCar.intervalAutoPilot);
-			isOnline().then(online => {
-				console.log("isOnline");
-				//myCar.AWS.publish('autoPilot', JSON.stringify({ auto_pilot: 0}));
-			});
-	 		
-		}
+		myCar.stopAutoPilot();	
 	});
 	
 	client.on('AUTO PILOT', () => {	
-		myCar.intervalAutoPilot = setInterval(function(){myCar.autoPilot();}, 200);
-		myCar.intervalDistance = setInterval(function(){myCar.measureAllDistances();}, 100);
-		myCar.intervalAccelerometer = setInterval(function(){myCar.measureAccelerometer();}, 500);
-		isOnline().then(online => {
-			//myCar.AWS.publish('autoPilot', JSON.stringify({ auto_pilot: 1}));
-			console.log("isOnline");
-		});
+		myCar.startAutoPilot();
     });
 });
 

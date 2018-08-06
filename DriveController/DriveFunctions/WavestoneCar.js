@@ -4,7 +4,11 @@ var Gpio = require('pigpio').Gpio;
 var mcpadc = require('mcp-spi-adc');
 var mpu9250 = require('mpu9250');
 var awsIot = require('aws-iot-device-sdk');
-var isOnline = require('is-online');
+const io = require('socket.io')();
+
+//var isOnline = require('is-online');
+const isReachable = require('is-reachable');
+
 
 
 var options = {
@@ -27,8 +31,7 @@ function WavestoneCar () {
 	//Motor engine instanciation
 	this.LeftMotorEngine = new MotorEngine(constants.LEFT_MOTOR_ENGINE_DIR_PIN, constants.LEFT_MOTOR_ENGINE_PWM_PIN);
 	this.RightMotorEngine = new MotorEngine(constants.RIGHT_MOTOR_ENGINE_DIR_PIN, constants.RIGHT_MOTOR_ENGINE_PWM_PIN);
-	
-	
+		
 	//Encoder instanciation
 	this.RightEncoder = new Encoder ("RIGHT ENCODER", constants.RIGHT_ENCODER_PINA, constants.RIGHT_ENCODER_PINB);
 	this.LeftEncoder = new Encoder ("LEFT ENCODER", constants.LEFT_ENCODER_PINA, constants.LEFT_ENCODER_PINB);
@@ -58,7 +61,8 @@ function WavestoneCar () {
 WavestoneCar.prototype.connectToAWS = function () {
 	var car = this;
 	
-	isOnline().then(online => {
+	//isOnline().then(online => {
+	isReachable('a2dzov8l2fnckl.iot.eu-west-2.amazonaws.com').then(reachable => {
 		console.log("Connected to Internet");
 				
 		//AWS connection
@@ -86,11 +90,24 @@ WavestoneCar.prototype.AWSOrderListener = function ()
 {
 	car = this;
 
-	isOnline().then(online => {
+	//isOnline().then(online => {
+	isReachable('a2dzov8l2fnckl.iot.eu-west-2.amazonaws.com').then(reachable => {
 		car.AWS.on ('message', function(topic, payload) {
 			console.log('message', topic, payload.toString());
 			var messageID = JSON.parse(payload).id;
 			console.log ("Message ID : ", messageID);
+			order = JSON.parse(payload).order_type;
+			console.log (order);
+
+			switch (order) {
+				case "start-autopilot" :
+					car.startAutoPilot();
+					break;
+				case "stop-autopilot" :
+					car.stopAutoPilot();
+					break;
+			}
+
 			car.AWS.publish('ACK_topic', JSON.stringify({ACK: messageID}));
 		});
 	});
@@ -108,22 +125,54 @@ WavestoneCar.prototype.isNewDirection = function (direction, pwmSpeed) {
 	return true;
 }
 
+
+
+WavestoneCar.prototype.isNewSpeed = function (speed) {
+	if (this.speed != speed)
+		return true;
+	return false;
+}
+
+WavestoneCar.prototype.PIDcontroller = function ()
+{
+	if (this.LeftEncoder.nbTicks > this.rightEncoder.nbTicks) {
+		if (this.LeftMotorEngine.pwmSpeed > 55) {
+			this.LeftMotorEngine.pwmSpeed = this.LeftMotorEngine.pwmSpeed - 1;
+		}
+		
+		if (this.RightMotorEngine.pwmSpeed < 255) {
+			this.RightMotorEngine.pwmSpeed = this.RightMotorEngine.pwmSpeed + 1;
+		}
+	} else if (this.LeftEncoder.nbTicks < this.rightEncoder.nbTicks) {
+		if (this.LeftMotorEngine.pwmSpeed < 255) {
+			this.LeftMotorEngine.pwmSpeed = this.LeftMotorEngine.pwmSpeed + 1;
+		}
+		
+		if (this.RightMotorEngine.pwmSpeed > 55) {
+			this.RightMotorEngine.pwmSpeed = this.RightMotorEngine.pwmSpeed - 1;
+		}
+	}
+}
+
 WavestoneCar.prototype.moveUpCM = function (distanceInCM, pwmSpeed){
 	var ticks = this.LeftEncoder.convertDistanceToTicks(distanceInCM/100);
 	console.log("ticks objective", ticks);
 	var car = this;
 
 	car.currentMoveMutex = setInterval(function(){
-		if (car.LeftEncoder.nbTicks >= ticks || car.RightEncoder.nbTicks >= ticks) {
-			clearInterval(car.currentMoveMutex);
+		//if (car.LeftEncoder.nbTicks >= ticks || car.RightEncoder.nbTicks >= ticks) {
+		if (Math.abs(car.RightEncoder.nbTicks) >= ticks) {
+			console.log(car.RightEncoder.name, ":", car.RightEncoder.nbTicks);
 			car.stop();
+			clearInterval(car.currentMoveMutex);
+			console.log(car.RightEncoder.name, ":", car.RightEncoder.nbTicks);
 		}
 		else {
 			car.moveUp(pwmSpeed);
 		}
-	}, 1);
-}
+	}, 2);
 
+}
 WavestoneCar.prototype.moveUp = function (pwmSpeed) {
 	if (this.isNewDirection("MOVE UP", pwmSpeed)) {
 		var pwmSpeed = 255;
@@ -138,9 +187,10 @@ WavestoneCar.prototype.moveDownCM = function (distanceInCM, pwmSpeed){
 	var car = this;
 
 	car.currentMoveMutex = setInterval(function(){
-		if (car.LeftEncoder.nbTicks >= ticks || car.RightEncoder.nbTicks >= ticks) {
-			clearInterval(car.currentMoveMutex);
+		//if (car.LeftEncoder.nbTicks >= ticks || car.RightEncoder.nbTicks >= ticks) {
+		if (Math.abs(car.RightEncoder.nbTicks) >= ticks) {
 			car.stop();
+			clearInterval(car.currentMoveMutex);
 		}
 		else {
 			car.moveDown(pwmSpeed);
@@ -158,15 +208,19 @@ WavestoneCar.prototype.moveDown = function (pwmSpeed) {
 }
 
 WavestoneCar.prototype.rotateRightDegree = function (degree, pwmSpeed){
-	var ticks = this.LeftEncoder.convertDistanceToTicks();
-	var startDegree = this.Accelerometer.values[6];
-	var endDegree = startDegree + degree;
+	var ticks = this.LeftEncoder.convertDegreeToTicks(degree);
+	console.log(ticks);
 	var car = this;
 
 	car.currentMoveMutex = setInterval(function(){
-		if (car.Accelerometer.values[9] != endDegree) {
-			clearInterval(car.currentMoveMutex);
+		//if (car.LeftEncoder.nbTicks >= ticks.leftEncoder && car.RightEncoder.nbTicks >= ticks.rightEncoder) {
+		if (Math.abs(car.RightEncoder.nbTicks) >= ticks.rightEncoder) {
+			console.log(car.RightEncoder.name, ":", car.RightEncoder.nbTicks);
 			car.stop();
+			console.log(car.RightEncoder.name, ":", car.RightEncoder.nbTicks);
+			clearInterval(car.currentMoveMutex);
+			console.log(car.RightEncoder.name, ":", car.RightEncoder.nbTicks);
+
 		}
 		else {
 			car.rotateRight(pwmSpeed);
@@ -183,16 +237,15 @@ WavestoneCar.prototype.rotateRight = function (pwmSpeed) {
 	}
 }
 
-WavestoneCar.prototype.rotateRightDegree = function (degree, pwmSpeed){
-	var ticks = this.LeftEncoder.convertDistanceToTicks();
-	var startDegree = this.Accelerometer.values[6];
-	var endDegree = startDegree + degree;
+WavestoneCar.prototype.rotateLeftDegree = function (degree, pwmSpeed){
+	var ticks = this.LeftEncoder.convertDegreeToTicks(degree);
 	var car = this;
 
 	car.currentMoveMutex = setInterval(function(){
-		if (car.Accelerometer.values[9] != endDegree) {
-			clearInterval(car.currentMoveMutex);
+		//if (car.LeftEncoder.nbTicks >= ticks.leftEncoder || car.RightEncoder.nbTicks >= ticks.rightEncoder) {
+		if (Math.abs(car.RightEncoder.nbTicks) >= ticks.rightEncoder) {
 			car.stop();
+			clearInterval(car.currentMoveMutex);
 		}
 		else {
 			car.rotateLeft(pwmSpeed);
@@ -420,6 +473,34 @@ WavestoneCar.prototype.rotateStrategy = function(){
 	var leftDistance = this.LeftSharpIRSensor.distance;
 	var rightDistance = this.RightSharpIRSensor.distance;
 
+	
+		if ((this.currentDirection == "ROTATE RIGHT" || this.currentDirection == "MOVE UP RIGHT" || this.currentDirection == "MOVE DOWN LEFT") && this.moreSpaceRightOrLeft() == "RIGHT") {
+			return "ROTATE RIGHT";
+		} else if ((this.currentDirection == "ROTATE LEFT" || this.currentDirection == "MOVE UP LEFT" || this.currentDirection == "MOVE DOWN RIGHT") && this.moreSpaceRightOrLeft() == "LEFT") {
+			return "ROTATE LEFT";
+		} else if (rightDistance > leftDistance) {
+			return "ROTATE RIGHT";
+		} else if (rightDistance < leftDistance) {
+			return "ROTATE LEFT";
+		} 
+		else if (!this.isBackObstacle()){
+			return this.backwardStrategy();
+		} else {
+			console.log("STOP ROTATE STRATEGY");
+			return "STOP";
+	}
+
+}
+
+/* 
+WavestoneCar.prototype.rotateStrategy = function(){
+	var frontDistance = this.FrontUltrasonicSensor.distance;
+	var frontRightDistance = this.FrontRightUltrasonicSensor.distance;
+	var frontLeftDistance = this.FrontLeftUltrasonicSensor.distance;
+	var backDistance = this.BackUltrasonicSensor.distance;
+	var leftDistance = this.LeftSharpIRSensor.distance;
+	var rightDistance = this.RightSharpIRSensor.distance;
+
 	if (frontDistance > 5 && frontRightDistance > 5 && frontLeftDistance > 5 && backDistance > 5) {//Appart
 		if ((this.currentDirection == "ROTATE RIGHT" || this.currentDirection == "MOVE UP RIGHT" || this.currentDirection == "MOVE DOWN LEFT") && this.moreSpaceRightOrLeft() == "RIGHT") {
 			return "ROTATE RIGHT";
@@ -437,7 +518,7 @@ WavestoneCar.prototype.rotateStrategy = function(){
 		return "STOP";
 	}
 
-}
+} */
 
 WavestoneCar.prototype.notYetStarted = function (){
 	var frontDistance = this.FrontUltrasonicSensor.distance;
@@ -479,7 +560,7 @@ WavestoneCar.prototype.chooseDirection = function(){
 	console.log(this.RightSharpIRSensor.name, ": " , this.RightSharpIRSensor.distance);
 
 	
-	if (leftDistance > 25 && rightDistance > 25) {
+	if (leftDistance > 26 && rightDistance > 26) {
 		this.ultraSoundReflexion = false;
 	}
 	
@@ -505,6 +586,30 @@ WavestoneCar.prototype.chooseDirection = function(){
 	}
 }
 
+WavestoneCar.prototype.startAutoPilot = function(){
+	car = this;
+	this.intervalAutoPilot = setInterval(function(){car.autoPilot();}, 200);
+	this.intervalDistance = setInterval(function(){car.measureAllDistances();}, 100);
+	this.intervalAccelerometer = setInterval(function(){car.measureAccelerometer();}, 500);
+	//isOnline().then(online => {
+	isReachable('a2dzov8l2fnckl.iot.eu-west-2.amazonaws.com').then(reachable => {
+		car.AWS.publish('autoPilot', JSON.stringify({ auto_pilot: 1}));
+	});
+}
+
+WavestoneCar.prototype.stopAutoPilot = function(){
+	car = this
+	this.stop();
+	if (this.autoPilotOn) {
+		this.autoPilotOn = false;
+		clearInterval(this.intervalDistance);
+		clearInterval(this.intervalAccelerometer);
+		clearInterval(this.intervalAutoPilot);
+		isReachable('a2dzov8l2fnckl.iot.eu-west-2.amazonaws.com').then(reachable => {
+			car.AWS.publish('autoPilot', JSON.stringify({ auto_pilot: 0}));
+		});
+	}
+}
 
 WavestoneCar.prototype.autoPilot = function (){
 	console.log("------------ BEGIN AUTO PILOT FUNCTION ------------");
@@ -523,28 +628,28 @@ WavestoneCar.prototype.autoPilot = function (){
 	console.log("Auto pilot: ", direction);
 	switch (direction) {
 		case "MOVE UP" :
-			this.moveUp();
+			this.moveUp(255);
 			break;
 		case "MOVE UP RIGHT" :
-			this.moveUpRight();
+			this.moveUpRight(255);
 			break;
 		case "MOVE UP LEFT" :
-			this.moveUpLeft();
+			this.moveUpLeft(255);
 			break;
 		case "ROTATE RIGHT" :
-			this.rotateRight();
+			this.rotateRight(255);
 			break;
 		case "ROTATE LEFT" :
-			this.rotateLeft();
+			this.rotateLeft(255);
 			break;
 		case "MOVE DOWN" :
-			this.moveDown();
+			this.moveDown(255);
 			break;
 		case "MOVE DOWN RIGHT" :
-			this.moveDownRight();
+			this.moveDownRight(255);
 			break;
 		case "MOVE DOWN LEFT" :
-			this.moveDownLeft();
+			this.moveDownLeft(255);
 			break;
 		case "STOP" :
 			this.stop();
@@ -560,7 +665,6 @@ module.exports.WavestoneCar = WavestoneCar;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
 function MotorEngine(dirPin, pwmPin){
 	this.dirPin = dirPin;
 	this.pwmPin = pwmPin;
@@ -571,7 +675,7 @@ function MotorEngine(dirPin, pwmPin){
 
 MotorEngine.prototype.moveForward = function (pwmSpeed) {
 	this.pwmSpeed = pwmSpeed;
-	this.direction = 0;
+	this.direction = 1;
 	
 	rpio.open(this.dirPin, rpio.OUTPUT);
 	rpio.open(this.pwmPin, rpio.PWM, rpio.LOW);
@@ -587,7 +691,7 @@ MotorEngine.prototype.moveForward = function (pwmSpeed) {
 	
 MotorEngine.prototype.moveBackward = function (pwmSpeed) {
 	this.pwmSpeed = pwmSpeed;
-	this.direction = 1;
+	this.direction = 0;
 	
 	rpio.open(this.dirPin, rpio.OUTPUT);
 	rpio.open(this.pwmPin, rpio.PWM, rpio.LOW);	
@@ -623,97 +727,61 @@ function Encoder(name, pinA, pinB) {
 	this.pinA = pinA
 	this.pinB = pinB;
 	this.nbTicks = 0;
+	this.statePinAPrev = 0
+	this.statePinASet = 0
+	this.statePinBPrev = 0
+	this.statePinBSet = 0
 	this.traveledDistance = 0; //distance in meter
 
 	var encoder = this;
 
-	rpio.open(pinA, rpio.INPUT);
-	rpio.poll(pinA, function countTickPinA(pinA){
-		encoder.nbTicks = encoder.nbTicks + 1; //CW
-		//encoder.setTraveledDistance();
-		} 
-	);
-
-	rpio.open(pinB, rpio.INPUT);
-	rpio.poll(pinB, function countTickPinB(pinB){
-		encoder.nbTicks = encoder.nbTicks + 1; //CW
-		//encoder.setTraveledDistance();
-	} );
-}
-
-/*
-function Encoder(name, pinA, pinB) {
-	this.name = name;
-	this.pinA = pinA
-	this.pinB = pinB;
-	this.nbTicks = 0;
-	this.traveledDistance = 0; //distance in meter
-
-	var encoder = this;
-
-	rpio.open(pinA, rpio.INPUT);
-	rpio.poll(pinA, function countTickPinA(pinA){
-		//Returns either 0 for LOW or 1 for HIGH
-		var statePinA = rpio.read(pinA);
-		var statePinB = rpio.read(encoder.pinB);
+	rpio.open(this.pinA, rpio.INPUT, rpio.PULL_UP);
+	rpio.open(this.pinB, rpio.INPUT, rpio.PULL_UP);
+	
+	rpio.poll(this.pinA, function countTickPinA(pinA){
+		encoder.statePinASet = rpio.read(encoder.pinA);
+		encoder.statePinBSet = rpio.read(encoder.pinB);
 		
-		// look for a low-to-high on channel A
-		if (statePinA == 1){
-			// check channel B to see which way encoder is turning
-			if (statePinB == 0) {
-				encoder.nbTicks = encoder.nbTicks + 1; //CW
-			}
-			else {
-				encoder.nbTicks = encoder.nbTicks - 1; // CCW
-			}
-		}
-		// must be a high-to-low edge on channel A
-		else {
-			// check channel B to see which way encoder is turning
-			if (statePinB == 1) {
-				encoder.nbTicks = encoder.nbTicks + 1; //CW
-			}
-			else {
-				encoder.nbTicks = encoder.nbTicks - 1; //CCW
-			}
-		}
-		//console.log(name, " ", encoder.nbTicks);
-		encoder.setTraveledDistance();
-		} 
-	);
+		encoder.nbTicks += encoder.ParseEncoder();
+		console.log (encoder.name, ":", encoder.nbTicks);
+		
+		encoder.statePinAPrev = encoder.statePinASet;
+		encoder.statePinBPrev = encoder.statePinBSet;
+	});
 
-	rpio.open(pinB, rpio.INPUT);
-	rpio.poll(pinB, function countTickPinB(pinB){
-		//Returns either 0 for LOW or 1 for HIGH
-		var statePinA = rpio.read(encoder.pinA);
-		var statePinB = rpio.read(pinB);
-
-		// look for a low-to-high on channel B
-		if (statePinB == 1){
-			// check channel A to see which way encoder is turning
-			if (statePinA == 1) {
-				encoder.nbTicks = encoder.nbTicks + 1; //CW
-			}
-			else {
-				encoder.nbTicks = encoder.nbTicks - 1; //CCW
-			}
-		}
-		// Look for a high-to-low on channel B
-		else {
-			// check channel B to see which way encoder is turning
-			if (statePinA == 0) {
-				encoder.nbTicks = encoder.nbTicks + 1; //CW
-			}
-			else {
-				encoder.nbTicks = encoder.nbTicks - 1; //CCW
-			}
-		}
-		//console.log(name, " ", encoder.nbTicks);
-		encoder.setTraveledDistance();
-		} );
+	rpio.poll(this.pinB, function countTickPinB(pinB){
+		encoder.statePinASet = rpio.read(encoder.pinA);
+		encoder.statePinBSet = rpio.read(encoder.pinB);
+		
+		encoder.nbTicks += encoder.ParseEncoder();
+		console.log (encoder.name, ":", encoder.nbTicks);
+		
+		encoder.statePinAPrev = encoder.statePinASet;
+		encoder.statePinBPrev = encoder.statePinBSet;
+	});
 }
 
-*/
+Encoder.prototype.ParseEncoder = function () {
+
+	if(this.statePinAPrev  == 1 && this.statePinBPrev  == 1) {
+		if(this.statePinASet == 0 && this.statePinBSet == 1) return -1;
+		if(this.statePinASet  == 1 && this.statePinBSet  == 0) return 1;
+	}
+	else if(this.statePinAPrev == 0 && this.statePinBPrev == 1) {
+		if(this.statePinASet == 0 && this.statePinBSet == 0) return -1;
+		if(this.statePinASet == 1 && this.statePinBSet == 1) return 1;
+	}
+	else if(this.statePinAPrev == 0 && this.statePinBPrev == 0) {
+		if(this.statePinASet == 1 && this.statePinBSet == 0) return -1;
+		if(this.statePinASet == 0 && this.statePinBSet == 1) return 1;
+	}
+	else if(this.statePinAPrev == 1 && this.statePinBPrev == 0) {
+		if(this.statePinASet == 1 && this.statePinBSet == 1) return -1;
+		if(this.statePinASet == 0 && this.statePinBSet == 0) return 1;
+	}
+	return 0;
+}
+
 
 //Process the distance in meter
 Encoder.prototype.setTraveledDistance = function (){
@@ -727,6 +795,45 @@ Encoder.prototype.convertDistanceToTicks = function (distance){
 	//Rover 5 encoder performs 333 ticks per Wheel Turn (20cm)
 	return (distance * 333) / 0.2; 
 }
+
+//For 360 degree : 
+//Right encoder : ~1625
+//Left encoder : ~ 1265
+Encoder.prototype.convertDegreeToTicks = function (degree){
+	var ticks = {
+		rightEncoder : 0,
+		leftEncoder : 0
+	};
+	
+	if (degree <= 45)
+	{
+		ticks.rightEncoder = (degree * 16) / 45; 
+		ticks.leftEncoder = (degree * 16) / 45;	
+	}
+	else if (degree > 45 && degree <= 90) {
+		ticks.rightEncoder = (degree * 120) / 90; 
+		ticks.leftEncoder = (degree * 120) / 90;	
+	} 
+	else if (degree > 90 && degree <= 180)
+	{
+		ticks.rightEncoder = (degree * 550) / 180; 
+		ticks.leftEncoder = (degree * 550) / 180;	
+	}
+	else if (degree > 180 && degree <= 360)
+	{
+		ticks.rightEncoder = (degree * 1410) / 360; 
+		ticks.leftEncoder = (degree *  1410) / 360;	
+	}
+	else if (degree > 360){
+		ticks.rightEncoder = (degree * 11950) / 2295; 
+		ticks.leftEncoder = (degree *  11950) / 2295;	
+	}
+	
+
+	return ticks; 
+} 
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -755,6 +862,7 @@ UltrasonicSensor.prototype.setDistance = function (distance){
 	else {
 		this.distance = (this.distance + distance) / 2; //Perform an average between the precedent value and the new one.
 	}
+	console.log(this.name," ", this.distance);
 }
 
 UltrasonicSensor.prototype.measureDistanceOnce = function (){
@@ -819,7 +927,7 @@ SharpIRSensor.prototype.setDistance = function (distance){
 	} else {
 		this.distance = (this.distance + distance) / 2; //Perform an average between the precedent value and the new one.
 	}
-	
+	console.log(this.name," ", this.distance);
 	
 }
 
@@ -846,7 +954,28 @@ module.exports.SharpIRSensor = SharpIRSensor;
 
 
 function Accelerometer () {
-	this.sensor = new mpu9250({UpMagneto: true, DEBUG: false, GYRO_FS: 0, ACCEL_FS: 1});
+	var MAG_CALIBRATION = { min: { x: -47.34375, y: -150.31640625, z: -25.1796875 },
+	max: { x: 124.27734375, y: 20.12109375, z: 165.95703125 },
+	offset: { x: 38.466796875, y: -65.09765625, z: 70.388671875 },
+	scale:
+	 { x: 1.5534084442927052,
+	   y: 1.5641960029336266,
+	   z: 1.3948008420020028 } }
+  ;
+	var GYRO_OFFSET= { x: 0.7360305343511457,
+		y: -0.36508396946564875,
+		z: 0.4856946564885494 }
+	  ;
+	var ACCEL_CALIBRATION = { 
+		offset:
+		{ x: 0.0254473876953125,
+		  y: -0.008126017252604166,
+		  z: 0.05443684895833333 },
+	   scale:
+		{ x: [ -0.9624959309895833, 1.0204361979166667 ],
+		  y: [ -0.9908504231770834, 1.0095255533854166 ],
+		  z: [ -0.93455322265625, 1.0620133463541668 ] } };
+	this.sensor = new mpu9250({UpMagneto: true, DEBUG: false, GYRO_FS: 0, ACCEL_FS: 1, magCalibration: MAG_CALIBRATION, gyroBiasOffset:GYRO_OFFSET, accelCalibration:ACCEL_CALIBRATION});
 	this.values = [];
 	this.pitch = 0;
 	this.roll = 0;
@@ -877,9 +1006,10 @@ Accelerometer.prototype.measureOnce = function () {
 
 	this.isNotStable();
 
-	//console.log("values x : ", this.values[6]," -- y: ",this.values[7]," -- z ",this.values[8]);
-	console.log("pitch: ", this.pitch);
-	console.log("roll: ", this.roll);
+	//console.log(this.values);
+	console.log("values x : ", this.values[6]," -- y: ",this.values[7]," -- z ",this.values[8]);
+	//console.log("pitch: ", this.pitch);
+	//console.log("roll: ", this.roll);
 }
 
 Accelerometer.prototype.measureOnceWithKalimantan = function () {
@@ -955,8 +1085,8 @@ Accelerometer.prototype.measureOnceWithKalimantan = function () {
 
 	this.isNotStable();
 	
-	console.log("pitch: ", this.pitch);
-	console.log("roll: ", this.roll);
+	//console.log("pitch: ", this.pitch);
+	//console.log("roll: ", this.roll);
 }
 
 module.exports.Accelerometer = Accelerometer;
